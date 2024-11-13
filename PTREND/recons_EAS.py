@@ -16,7 +16,7 @@ B_dec = 0.
 B_inc = np.pi/2. + 1.0609856522873529
 
 output_directory = '/Users/mguelfan/Documents/GRAND/ADF_DC2/Reconstruction/PTREND/nonoise_110uV_5antennas/'
-event_type = "background" #or background
+event_type = "background" #or "EAS"
 print('event type', event_type)
 
 def handler(signum, frame):
