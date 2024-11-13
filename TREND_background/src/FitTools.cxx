@@ -122,26 +122,16 @@ void FitTools::_initFit()
     // Set bounding: 0 <= theta <= pi
     //===
 
-    _xPORT.B( 1, 1 ) = (_theta_input-2.)*M_PI/180;  // theta parameter (1st) min value (1)
-    _xPORT.B( 2, 1 ) = (_theta_input+2.)*M_PI/180;  // theta parameter (1st) max value (2)
-    _xPORT.B( 1, 2 ) = (_phi_input-.1)*M_PI/180;    // phi parameter (2nd) min value (1)
-    _xPORT.B( 2, 2 ) = (_phi_input+.1)*M_PI/180;    // phi parameter (2nd) max value (2)
-    _xPORT.B( 1, 3) = -15.6e3 - 12.3e3/cos(_theta_input*M_PI/180);    // r parameter (3th) min value (1)
-    _xPORT.B( 2, 3) = -6.1e3 - 15.4e3/cos(_theta_input*M_PI/180);     // r parameter (3th) max value (2)
-    _xPORT.B( 1, 4) = -(-6.1e3 - 15.4e3/cos(_theta_input*M_PI/180));  // t parameter (3th) max value (2) similar to r !
-    _xPORT.B( 2, 4) = 0;                                              // t parameter (3th) min value (1) similar to r !
+    _xPORT.B( 1, 1 ) = -1.e6; // X parameter (1st) min value (1)
+    _xPORT.B( 2, 1 ) = 1.e6;  // X parameter (1st) max value (2)
+    _xPORT.B( 1, 2 ) = -1.e6; // Y parameter (2nd) min value (1)
+    _xPORT.B( 2, 2 ) = 1.e6;  // Y parameter (2nd) max value (2)
+    _xPORT.B( 1, 3) = 0.;     // Z parameter (3th) min value (1)
+    _xPORT.B( 2, 3) = 1.e5;   // Z parameter (3th) max value (2)
+    _xPORT.B( 1, 4) = -1.e6;  // t parameter (3th) max value (2) similar to r !
+    _xPORT.B( 2, 4) = 0;      // t parameter (3th) min value (1) similar to r !
     //std::cout<<"_xPORT.B( 1, 3) = "<<_xPORT.B( 1, 3)<<" _xPORT.B( 2, 3) = "<<_xPORT.B( 2, 3)<<std::endl;
 
-
-    // //Debug
-    // _xPORT.B( 1, 1 ) = 92.92*M_PI/180.;  // theta parameter (1st) min value (1)
-    // _xPORT.B( 2, 1 ) = 92.92*M_PI/180.;  // theta parameter (1st) max value (2)
-    // _xPORT.B( 1, 2 ) = M_PI;    // phi parameter (2nd) min value (1)
-    // _xPORT.B( 2, 2 ) = M_PI;    // phi parameter (2nd) max value (2)
-    // _xPORT.B( 1, 3) = 249870.0;                       // r parameter (3th) min value (1)
-    // _xPORT.B( 2, 3) = 249870.0;                       // r parameter (3th) max value (2)
-    // _xPORT.B( 1, 4) = -1.e6;                       // t xmax parameter (3th) min value (1)
-    // _xPORT.B( 2, 4) = 1.e6;                        // t xmax parameter (3th) max value (2)
 
     // Initialise fit parameters
     //===
@@ -2755,12 +2745,12 @@ void SWF_function_F( int& N, double* X, int& NF, double* F, int* Na,
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {
   static double fi, dx_, dy_, dz_, x_xmax, y_xmax, z_xmax, _n;
-  double GroundAltitude = 1264.;//1086.;
+  //double GroundAltitude = 1264.;//1086.;
   //; X[ 0 ] = theta ; X[ 1 ] = phi ; X[ 2 ] = r ; X[ 3 ] = t emission ; X[ 4 ] = c
   // Build Xmax position in opposite direction to the shower propagation
-  x_xmax =  - X[ 2 ] * sin(X[ 0 ]) * cos(X[ 1 ]);
-  y_xmax =  - X[ 2 ] * sin(X[ 0 ]) * sin(X[ 1 ]);
-  z_xmax =  - X[ 2 ] * cos(X[ 0 ]) + GroundAltitude;
+  x_xmax =  X[ 0 ];
+  y_xmax =  X[ 1 ];
+  z_xmax =  X[ 2 ];
 
   F[ 0 ] = 0.0;
     for ( int i = 0; i < Na[ 0 ]; i++)
