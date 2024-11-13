@@ -2487,7 +2487,7 @@ double _ZHSEffectiveRefractionIndex(double x0,double y0,double z0, double xa,dou
     else{
       avn=ns*exp(kr*h0) ;
       //std::cout<<"avn3:"<<avn<<std::endl;
-      std::cout<<"Effective n: h0=hd"<<std::endl;
+      //std::cout<<"Effective n: h0=hd"<<std::endl;
     }
     n_eff=1.e0+1.e-6*avn ; //average (effective) n
   }
