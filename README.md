@@ -1,11 +1,10 @@
 # Reconstruction
 
 TREND_EAS:
-Reconstruction code adapted for EAS (conic parametrisation in SWF)
+Reconstruction code with SWF conic parametrisation 
 
 TREND_background:
-Reconstruction code that can be used for EAS and background (airplanes....)
-For SWF, the scan is done on cartesian coordinates and don't use the conic parametrisation
+Reconstruction code with SWF cartesian coordinates
 So it should be slower
 
 PTREND:

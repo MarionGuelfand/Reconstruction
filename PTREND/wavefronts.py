@@ -16,7 +16,7 @@ c_light = 2.997924580e8
 R_earth = 6371007.0
 ns = 325
 kr = -0.1218
-groundAltitude = 1264 # DC2
+groundAltitude = 1086 #1264 DC2
 
 B_dec = 0.
 B_inc = np.pi/2. + 1.0609856522873529
@@ -345,6 +345,7 @@ def SWF_model(params, Xants, verbose=False, cr=1.0):
     tants = np.zeros(nants)
     for i in range(nants):
         n_average = ZHSEffectiveRefractionIndex(Xmax, Xants[i, :])
+        #n_average = 1
         dX = Xants[i, :] - Xmax
         tants[i] = t_s + n_average / cr * np.linalg.norm(dX)
 
