@@ -9,9 +9,11 @@ import signal
 import pandas as pd
 from iminuit import minimize
 import argparse
+from scipy.optimize import basinhopping
+from scipy.optimize import differential_evolution
 
 c_light = 2.997924580e8
-groundAltitude = 1086 #1264
+groundAltitude = 1264 #1264
 B_dec = 0.
 B_inc = np.pi/2. + 1.0609856522873529
 
@@ -108,7 +110,7 @@ class coincidence_set:
                 self.peak_time_array[current_coinc,:self.nants[current_coinc]] = peak_time_array[mask]
                 self.peak_time_array_in_s[current_coinc,:self.nants[current_coinc]] = peak_time_array_in_s[mask]
                 #print(len(self.peak_time_array[current_coinc,:self.nants[current_coinc]]))
-                #self.peak_time_array[current_coinc,:self.nants[current_coinc]] -= np.min(self.peak_time_array[current_coinc,:self.nants[current_coinc]])
+                self.peak_time_array[current_coinc,:self.nants[current_coinc]] -= np.min(self.peak_time_array[current_coinc,:self.nants[current_coinc]])
                 self.peak_amp_array[current_coinc,:self.nants[current_coinc]] = peak_amp_array[mask]
                 current_coinc += 1
         return
@@ -298,29 +300,35 @@ def main():
                             bounds = [[np.deg2rad(0),np.deg2rad(180)],
                                 [np.deg2rad(0),np.deg2rad(360)], 
                                [0, 20000],
-                              [-20000, 0]]                                
+                              [-20000, 0]]
+                                                       
                         params_in = np.array(bounds).mean(axis=1)
                         args=(co.antenna_coords_array[current_recons,:co.nants[current_recons]],co.peak_time_array[current_recons,:co.nants[current_recons]],False)
                         # Test value of gradient, compare to finite difference estimate
-                        method = 'L-BFGS-B' 
+                        #method = 'L-BFGS-B' 
+                        #res = so.minimize(SWF_loss,params_in,args=args,bounds=bounds,method=method,options={'ftol':1e-13})
+                        #print('xxxxx')
+                        #res = so.minimize(SWF_loss,res.x,args=args,bounds=bounds,method='Nelder-Mead',options={'maxiter':400})
                         #method = 'migrad'
-                        print('Minimize using %s'%method)   
-                        #res = minimize(SWF_loss,params_in,args=args,bounds=bounds,method=method)                     
-                        res = so.minimize(SWF_loss,params_in,args=args,bounds=bounds,method=method,options={'ftol':1e-13})
-                        print('xxxxx')
-                        res = so.minimize(SWF_loss,res.x,args=args,bounds=bounds,method='Nelder-Mead',options={'maxiter':400})
+                        #print('Minimize using %s'%method)   
+                        #res = minimize(SWF_loss,params_in,args=args,bounds=bounds,method=method) 
+                        #res = minimize(SWF_loss,params_in,args=args,bounds=bounds,method=method,options={'stra':2})                    
+                        #minimizer_kwargs = {"method": "L-BFGS-B", "args": args, "bounds": bounds}
+                        #res = basinhopping(SWF_loss, params_in, minimizer_kwargs=minimizer_kwargs, niter=200)
+                        res = differential_evolution(SWF_loss, bounds, args=args, maxiter=1000, tol=1e-6, mutation=(0.5, 1), 
+                                                        recombination=0.7,  seed=42,   disp=True )
                         params_out = res.x
                         
                         #Compute errors with numerical estimate of Hessian matrix, inversion and sqrt of diagonal terms
-                        if (st.compute_errors):
-                            args=(co.antenna_coords_array[current_recons,:],co.peak_time_array[current_recons,:])
-                            hess = nd.Hessian(SWF_loss)(params_out,*args)
-                            errors = np.sqrt(np.diag(np.linalg.inv(hessian)))
-                        else:
-                            errors = np.array([np.nan]*2)      
+                        #if (st.compute_errors):
+                        #    args=(co.antenna_coords_array[current_recons,:],co.peak_time_array[current_recons,:])
+                        #    hess = nd.Hessian(SWF_loss)(params_out,*args)
+                        #    errors = np.sqrt(np.diag(np.linalg.inv(hessian)))
+                        #else:
+                        #    errors = np.array([np.nan]*2)      
 
-                        print ("Best fit parameters = ",*np.rad2deg(params_out[:2]),*params_out[2:])
-                        print ("Chi2 at best fit = ",SWF_loss(params_out,*args,False))
+                        #print ("Best fit parameters = ",*np.rad2deg(params_out[:2]),*params_out[2:])
+                        #print ("Chi2 at best fit = ",SWF_loss(params_out,*args,False))
             
                         #print ("Chi2 at best fit \pm errors = ",SWF_loss(params_out+errors,*args),SWF_loss(params_out-errors,*args))
                         # Write down results to file 

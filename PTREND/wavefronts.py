@@ -16,7 +16,7 @@ c_light = 2.997924580e8
 R_earth = 6371007.0
 ns = 325
 kr = -0.1218
-groundAltitude = 1086 #1264 DC2
+groundAltitude = 1264 #1264 DC2
 
 B_dec = 0.
 B_inc = np.pi/2. + 1.0609856522873529

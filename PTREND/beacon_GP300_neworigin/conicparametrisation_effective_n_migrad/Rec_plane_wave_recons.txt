@@ -84,7 +84,7 @@
 83  13  7.07794e+01          nan  2.60910e+02          nan          nan          nan
 84  10  7.10637e+01          nan  2.61295e+02          nan          nan          nan
 85  11  7.21481e+01          nan  2.56734e+02          nan          nan          nan
-86  11  7.63358e+01          nan  2.57759e+02          nan          nan          nan
+86  11  7.63357e+01          nan  2.57759e+02          nan          nan          nan
 87   9  8.03563e+01          nan  2.57402e+02          nan          nan          nan
 88   9  5.73828e+01          nan  2.62568e+02          nan          nan          nan
 89  10  6.08959e+01          nan  2.61117e+02          nan          nan          nan
@@ -255,7 +255,7 @@
 254   9  8.87353e+01          nan  2.61734e+02          nan          nan          nan
 255  13  7.35756e+01          nan  2.59671e+02          nan          nan          nan
 256   8  8.06860e+01          nan  2.65632e+02          nan          nan          nan
-257  12  7.09304e+01          nan  2.61009e+02          nan          nan          nan
+257  12  7.09305e+01          nan  2.61009e+02          nan          nan          nan
 258  11  6.41114e+01          nan  2.60418e+02          nan          nan          nan
 259  10  7.01651e+01          nan  2.61394e+02          nan          nan          nan
 260  10  6.37639e+01          nan  2.60218e+02          nan          nan          nan
@@ -325,7 +325,7 @@
 324   9  7.07435e+01          nan  2.61322e+02          nan          nan          nan
 325  10  7.67044e+01          nan  2.66128e+02          nan          nan          nan
 326  10  7.11104e+01          nan  2.60807e+02          nan          nan          nan
-327  11  6.41158e+01          nan  2.60467e+02          nan          nan          nan
+327  11  6.41157e+01          nan  2.60467e+02          nan          nan          nan
 328  10  6.11229e+01          nan  2.60989e+02          nan          nan          nan
 329  10  7.01183e+01          nan  2.61412e+02          nan          nan          nan
 330  12  7.07740e+01          nan  2.58508e+02          nan          nan          nan
@@ -337,7 +337,7 @@
 336  10  7.17505e+01          nan  2.61598e+02          nan          nan          nan
 337  10  6.10373e+01          nan  2.61132e+02          nan          nan          nan
 338  12  7.10555e+01          nan  2.60945e+02          nan          nan          nan
-339  10  8.89233e+01          nan  2.52122e+02          nan          nan          nan
+339  10  8.89235e+01          nan  2.52122e+02          nan          nan          nan
 340   9  8.01029e+01          nan  2.57069e+02          nan          nan          nan
 341  10  7.01092e+01          nan  2.61419e+02          nan          nan          nan
 342  10  6.14872e+01          nan  2.60724e+02          nan          nan          nan
@@ -354,7 +354,7 @@
 353  11  7.07862e+01          nan  2.61135e+02          nan          nan          nan
 354  10  6.38591e+01          nan  2.60273e+02          nan          nan          nan
 355  10  7.14454e+01          nan  2.61738e+02          nan          nan          nan
-356  11  7.08594e+01          nan  2.61163e+02          nan          nan          nan
+356  11  7.08593e+01          nan  2.61163e+02          nan          nan          nan
 357  12  7.15783e+01          nan  2.61024e+02          nan          nan          nan
 358  11  6.38291e+01          nan  2.60892e+02          nan          nan          nan
 359  12  7.16006e+01          nan  2.61012e+02          nan          nan          nan
@@ -366,7 +366,7 @@
 365   9  7.05655e+01          nan  2.61421e+02          nan          nan          nan
 366  12  7.15394e+01          nan  2.61009e+02          nan          nan          nan
 367  10  6.93129e+01          nan  2.58047e+02          nan          nan          nan
-368  13  7.08044e+01          nan  2.60979e+02          nan          nan          nan
+368  13  7.08045e+01          nan  2.60979e+02          nan          nan          nan
 369  10  6.10242e+01          nan  2.61077e+02          nan          nan          nan
 370   9  6.90161e+01          nan  2.63168e+02          nan          nan          nan
 371  11  6.59653e+01          nan  2.58749e+02          nan          nan          nan
