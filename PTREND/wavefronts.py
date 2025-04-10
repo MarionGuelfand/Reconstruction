@@ -582,7 +582,9 @@ def ADF_3D_parameters(params, Aants, Xants, Xmax, asym_coeff=0.01):
     # 
     XmaxDist = (groundAltitude-Xmax[2])/K[2]
     # print('XmaxDist = ',XmaxDist)
-    #asym = asym_coeff * (1. - np.dot(K,Bvec)**2) # Azimuthal dependence, in \sin^2(\alpha)
+
+    theta_deg = 180-np.rad2deg(theta)
+    asym_coeff = -0.003*theta_deg+0.220
     asym = asym_coeff/np.sqrt(1. - np.dot(K,Bvec)**2)
     #
 
@@ -611,10 +613,14 @@ def ADF_3D_parameters(params, Aants, Xants, Xmax, asym_coeff=0.01):
         omega_cr_analytic_effectif = np.arccos(1./ZHSEffectiveRefractionIndex(Xmax, np.array([0, 0, groundAltitude])))
         # print ("omega_cr = ",omega_cr)
 
+        theta_deg = np.rad2deg(theta) 
+        if theta_deg > 110: # < 70° in CR conventions:
+            omega_cr = min(omega_cr, np.deg2rad(0.6))
+
         # Distribution width. Here rescaled by ratio of cosines (why ?)
         width = ct / (dX[2]/l_ant) * delta_omega
         # Distribution
-        adf = amplitude/l_ant / (1.+4.*( ((np.tan(omega)/np.tan(omega_cr))**2 - 1. )/width )**2)
+        adf = amplitude/l_ant / (1.+4.*( ((np.tan(omega)/np.tan(omega_cr))**2 - 1. )/delta_omega )**2)
         adf *= 1. + asym*np.cos(eta) # 
         # Chi2
         res[i]= (Aants[i]-adf)
@@ -669,7 +675,8 @@ def ADF_3D_loss(params, Aants, Xants, Xmax, asym_coeff=0.01, verbose=False):
     XmaxDist = (groundAltitude-Xmax[2])/K[2]
 
     # print('XmaxDist = ',XmaxDist)
-    asym = asym_coeff * (1. - np.dot(K,Bvec)**2) # Azimuthal dependence, in \sin^2(\alpha)
+    theta_deg = 180-np.rad2deg(theta)
+    asym_coeff = -0.003*theta_deg+0.220
     asym = asym_coeff/np.sqrt(1. - np.dot(K,Bvec)**2)
     #
 
@@ -689,14 +696,20 @@ def ADF_3D_loss(params, Aants, Xants, Xmax, asym_coeff=0.01, verbose=False):
         
         omega_cr = compute_Cerenkov_3D(Xants[i,:],K,XmaxDist,Xmax,2.0e3,groundAltitude)
         #omega_cr= np.arccos(1./RefractionIndexAtPosition(Xmax))
-
+    
         #print ("omega_cr = ",np.rad2deg(omega_cr))
+
+        theta_deg = np.rad2deg(theta)
+        if theta_deg > 110: #< 70° in CR conventions:
+            #print('theta CR', 180-theta_deg)
+            omega_cr = min(omega_cr, np.deg2rad(0.6))
 
         # Distribution width. Here rescaled by ratio of cosines (why ?)
         width = ct / (dX[2]/l_ant) * delta_omega
         #print('width', width)
+
         # Distribution
-        adf = amplitude/l_ant / (1.+4.*( ((np.tan(omega)/np.tan(omega_cr))**2 - 1. )/width )**2)
+        adf = amplitude/l_ant / (1.+4.*( ((np.tan(omega)/np.tan(omega_cr))**2 - 1. )/delta_omega)**2)
         adf *= 1. + asym*np.cos(eta) # 
         # Chi2
         tmp += (Aants[i]-adf)**2
@@ -747,9 +760,10 @@ def ADF_3D_model(params, Xants, Xmax, asym_coeff=0.01):
     # 
     XmaxDist = (groundAltitude-Xmax[2])/K[2]
     # print('XmaxDist = ',XmaxDist)
-    #asym = asym_coeff * (1. - np.dot(K,Bvec)**2) # Azimuthal dependence, in \sin^2(\alpha)
+
+    theta_deg = 180-np.rad2deg(theta)
+    asym_coeff = -0.003*theta_deg+0.220
     asym = asym_coeff/np.sqrt(1. - np.dot(K,Bvec)**2)
-    #
 
     # Loop on antennas. Here no precomputation table is possible for Cerenkov angle computation.
     # Calculation needs to be done for each antenna.
@@ -767,10 +781,15 @@ def ADF_3D_model(params, Xants, Xmax, asym_coeff=0.01):
         omega_cr = compute_Cerenkov_3D(Xants[i,:],K,XmaxDist,Xmax,2.0e3,groundAltitude)
         # print ("omega_cr = ",omega_cr)
 
+        theta_deg = np.rad2deg(theta) 
+        if theta_deg > 110: # < 70° in CR conventions:
+            #print('theta CR', 180-theta_deg)
+            omega_cr = min(omega_cr, np.deg2rad(0.6))
+
         # Distribution width. Here rescaled by ratio of cosines (why ?)
         width = ct / (dX[2]/l_ant) * delta_omega
         # Distribution
-        adf = amplitude/l_ant / (1.+4.*( ((np.tan(omega)/np.tan(omega_cr))**2 - 1. )/width )**2)
+        adf = amplitude/l_ant / (1.+4.*( ((np.tan(omega)/np.tan(omega_cr))**2 - 1. )/delta_omega )**2)
         adf *= 1. + asym*np.cos(eta) # 
         # Chi2
         res[i]= adf

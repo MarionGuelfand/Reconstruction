@@ -144,7 +144,6 @@ class setup:
             self.outfile = self.data_dir+'/Rec_adf_recons.txt'
             self.outfile_convergence = self.data_dir+'/Rec_adf_time.txt'
             self.outfile_before_after_Xmax = self.data_dir+'/Rec_adf_recons.txt'
-            #self.outfile_res = self.data_dir+'/Rec_adf_amplitude_residuals_Cerenkov_asymmetry.txt'
             self.outfile_res = self.data_dir+'/Rec_adf_parameters.txt'
             if os.path.exists(self.outfile_res):
                 os.remove(self.outfile_res)
@@ -157,6 +156,8 @@ class setup:
         if os.path.exists(self.outfile):
             # Remove previous files
             os.remove(self.outfile)
+        if os.path.exists(self.outfile_convergence):
+            os.remove(self.outfile_convergence)
         
 
 
@@ -311,21 +312,17 @@ def main():
                         #res = so.minimize(SWF_loss,res.x,args=args,bounds=bounds,method='Nelder-Mead',options={'maxiter':400})
                         #method = 'migrad'
                         #print('Minimize using %s'%method)   
-                        #res = minimize(SWF_loss,params_in,args=args,bounds=bounds,method=method) 
-                        #res = minimize(SWF_loss,params_in,args=args,bounds=bounds,method=method,options={'stra':2})                    
-                        #minimizer_kwargs = {"method": "L-BFGS-B", "args": args, "bounds": bounds}
-                        #res = basinhopping(SWF_loss, params_in, minimizer_kwargs=minimizer_kwargs, niter=200)
                         res = differential_evolution(SWF_loss, bounds, args=args, maxiter=1000, tol=1e-6, mutation=(0.5, 1), 
-                                                        recombination=0.7,  seed=42,   disp=True )
+                                                        recombination=0.7,  seed=42,   disp=True) #True to display the func at each iteration
                         params_out = res.x
                         
                         #Compute errors with numerical estimate of Hessian matrix, inversion and sqrt of diagonal terms
-                        #if (st.compute_errors):
-                        #    args=(co.antenna_coords_array[current_recons,:],co.peak_time_array[current_recons,:])
-                        #    hess = nd.Hessian(SWF_loss)(params_out,*args)
-                        #    errors = np.sqrt(np.diag(np.linalg.inv(hessian)))
-                        #else:
-                        #    errors = np.array([np.nan]*2)      
+                        if (st.compute_errors):
+                            args=(co.antenna_coords_array[current_recons,:],co.peak_time_array[current_recons,:])
+                            hess = nd.Hessian(SWF_loss)(params_out,*args)
+                            errors = np.sqrt(np.diag(np.linalg.inv(hess)))
+                        else:
+                            errors = np.array([np.nan]*2)      
 
                         #print ("Best fit parameters = ",*np.rad2deg(params_out[:2]),*params_out[2:])
                         #print ("Chi2 at best fit = ",SWF_loss(params_out,*args,False))
@@ -336,7 +333,6 @@ def main():
                         end_time = time.time()
                         sphere_time = end_time - begining_time
                         st.write_xmax(st.outfile,co.coinc_index_array[current_recons,0],co.nants[current_recons],params_out, SWF_loss(params_out, *args))
-                        #L-BFGS-B
                         st.write_timing(st.outfile_convergence,co.coinc_index_array[current_recons,0],co.nants[current_recons], sphere_time)
                         i+=1          
 
@@ -349,7 +345,6 @@ def main():
                     continue 
 
                 except MemoryError as e:
-                    # Ce bloc est exécuté si une MemoryError est levée
                     print("Memoryerror :", e)
                     continue
                     
@@ -377,12 +372,12 @@ def main():
                 theta_in = 180-float(l[2])
                 phi_in   = (180+float(l[4]))%360
                 l = fid_input_xmax.readline().strip().split()
-                #here, reconstructed Xmax
+                #here, reconstructed Xsource
                 Xmax = np.array([float(l[4]),float(l[5]),float(l[6])])
                 bounds = [[np.deg2rad(theta_in-2),np.deg2rad(theta_in+2)],
                             [np.deg2rad(phi_in-1),np.deg2rad(phi_in+1)],
-                            [0.1, 3.0],
-                            [1e5,1e10]]
+                            [1.25, 3.0],
+                            [1e6,1e10]]
                 params_in = np.array(bounds).mean(axis=1)
 
                 lant = (groundAltitude-Xmax[2])/np.cos(np.deg2rad(theta_in))
