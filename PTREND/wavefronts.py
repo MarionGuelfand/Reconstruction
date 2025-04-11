@@ -7,6 +7,8 @@ from scipy.optimize import fsolve
 from solver import newton
 from rotation import rotation
 from scipy.optimize import fsolve, brentq
+import argparse
+
 
 # Used for interpolation
 n_omega_cr = 20
@@ -16,7 +18,12 @@ c_light = 2.997924580e8
 R_earth = 6371007.0
 ns = 325
 kr = -0.1218
-groundAltitude = 1264 #1264 DC2
+    
+if len(sys.argv) > 3:
+    groundAltitude = float(sys.argv[3])
+else:
+    groundAltitude = 1086  
+
 
 B_dec = 0.
 B_inc = np.pi/2. + 1.0609856522873529
@@ -322,7 +329,7 @@ def PWF_model(params, Xants, cr=1.0):
     '''
     theta, phi = params
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp=np.sin(phi)
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     dX = Xants - np.array([0.,0.,groundAltitude])
     tants = np.dot(dX,K) / cr 
  
@@ -340,7 +347,7 @@ def SWF_model(params, Xants, verbose=False, cr=1.0):
     theta, phi, r_xmax, t_s = params
     nants = Xants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
-    K = np.array([st*cp, st*sp, ct])
+    K = np.array([-st*cp, -st*sp, -ct])
     Xmax = -r_xmax * K + np.array([0., 0., groundAltitude])
     tants = np.zeros(nants)
     for i in range(nants):
@@ -384,7 +391,7 @@ def SWF_loss(params, Xants, tants, verbose=False, log = False, cr=1.0):
         theta, phi, r_xmax, t_s = params
     nants = tants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     Xmax = -r_xmax * K + np.array([0.,0.,groundAltitude]) # Xmax is in the opposite direction to shower propagation.
     #Xmax = -r_xmax * K + Xcore #Xcore is chosen taking the mean postion of triggered antennas
 
@@ -428,7 +435,7 @@ def SWF_grad(params, Xants, tants, verbose=False, cr=1.0):
     # print("theta,phi,r_xmax,t_s = ",theta,phi,r_xmax,t_s)
     nants = tants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     Xmax = -r_xmax * K + np.array([0.,0.,groundAltitude]) # Xmax is in the opposite direction to shower propagation.
     # Derivatives of Xmax, w.r.t. theta, phi, r_xmax
     dK_dtheta = np.array([ct*cp,ct*sp,-st])
@@ -463,7 +470,7 @@ def SWF_hess(params, Xants, tants, verbose=False, cr=1.0):
     # print("theta,phi,r_xmax,t_s = ",theta,phi,r_xmax,t_s)
     nants = tants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     Xmax = -r_xmax * K + np.array([0.,0.,groundAltitude]) # Xmax is in the opposite direction to shower propagation.
     # Derivatives of Xmax, w.r.t. theta, phi, r_xmax
     dK_dtheta = np.array([ct*cp,ct*sp,-st])
@@ -496,7 +503,7 @@ def SWF_residuals(params, Xants, tants, verbose=False, cr=1.0):
     # print("theta,phi,r_xmax,t_s = ",theta,phi,r_xmax,t_s)
     nants = tants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     Xmax = -r_xmax * K + np.array([0.,0.,groundAltitude]) # Xmax is in the opposite direction to shower propagation.
 
     # Make sure Xants and tants are compatible
@@ -529,7 +536,7 @@ def SWF_simulation(params, Xants, sigma_t = 5e-9, iseed=1234, cr=1.0):
     theta, phi, r_xmax, t_s = params
     nants = Xants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
-    K = np.array([st*cp, st*sp, ct])
+    K = np.array([-st*cp, -st*sp, -ct])
     Xmax = -r_xmax * K + np.array([0.,0.,groundAltitude])
     tants = np.zeros(nants)
     for i in range(nants):
@@ -573,7 +580,7 @@ def ADF_3D_parameters(params, Aants, Xants, Xmax, asym_coeff=0.01):
     nants = Xants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
     # Define shower basis vectors
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     K_plan = np.array([K[0],K[1]])
     KxB = np.cross(K,Bvec); KxB /= np.linalg.norm(KxB)
     KxKxB = np.cross(K,KxB); KxKxB /= np.linalg.norm(KxKxB)
@@ -583,7 +590,7 @@ def ADF_3D_parameters(params, Aants, Xants, Xmax, asym_coeff=0.01):
     XmaxDist = (groundAltitude-Xmax[2])/K[2]
     # print('XmaxDist = ',XmaxDist)
 
-    theta_deg = 180-np.rad2deg(theta)
+    theta_deg = np.rad2deg(theta)
     asym_coeff = -0.003*theta_deg+0.220
     asym = asym_coeff/np.sqrt(1. - np.dot(K,Bvec)**2)
     #
@@ -614,7 +621,7 @@ def ADF_3D_parameters(params, Aants, Xants, Xmax, asym_coeff=0.01):
         # print ("omega_cr = ",omega_cr)
 
         theta_deg = np.rad2deg(theta) 
-        if theta_deg > 110: # < 70° in CR conventions:
+        if theta_deg < 70: 
             omega_cr = min(omega_cr, np.deg2rad(0.6))
 
         # Distribution width. Here rescaled by ratio of cosines (why ?)
@@ -664,7 +671,7 @@ def ADF_3D_loss(params, Aants, Xants, Xmax, asym_coeff=0.01, verbose=False):
     nants = Xants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
     # Define shower basis vectors
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     K_plan = np.array([K[0],K[1]])
     KxB = np.cross(K,Bvec); KxB /= np.linalg.norm(KxB)
     KxKxB = np.cross(K,KxB); KxKxB /= np.linalg.norm(KxKxB)
@@ -675,7 +682,7 @@ def ADF_3D_loss(params, Aants, Xants, Xmax, asym_coeff=0.01, verbose=False):
     XmaxDist = (groundAltitude-Xmax[2])/K[2]
 
     # print('XmaxDist = ',XmaxDist)
-    theta_deg = 180-np.rad2deg(theta)
+    theta_deg = np.rad2deg(theta)
     asym_coeff = -0.003*theta_deg+0.220
     asym = asym_coeff/np.sqrt(1. - np.dot(K,Bvec)**2)
     #
@@ -700,7 +707,7 @@ def ADF_3D_loss(params, Aants, Xants, Xmax, asym_coeff=0.01, verbose=False):
         #print ("omega_cr = ",np.rad2deg(omega_cr))
 
         theta_deg = np.rad2deg(theta)
-        if theta_deg > 110: #< 70° in CR conventions:
+        if theta_deg <70: 
             #print('theta CR', 180-theta_deg)
             omega_cr = min(omega_cr, np.deg2rad(0.6))
 
@@ -751,7 +758,7 @@ def ADF_3D_model(params, Xants, Xmax, asym_coeff=0.01):
     nants = Xants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
     # Define shower basis vectors
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     K_plan = np.array([K[0],K[1]])
     KxB = np.cross(K,Bvec); KxB /= np.linalg.norm(KxB)
     KxKxB = np.cross(K,KxB); KxKxB /= np.linalg.norm(KxKxB)
@@ -761,7 +768,7 @@ def ADF_3D_model(params, Xants, Xmax, asym_coeff=0.01):
     XmaxDist = (groundAltitude-Xmax[2])/K[2]
     # print('XmaxDist = ',XmaxDist)
 
-    theta_deg = 180-np.rad2deg(theta)
+    theta_deg = np.rad2deg(theta)
     asym_coeff = -0.003*theta_deg+0.220
     asym = asym_coeff/np.sqrt(1. - np.dot(K,Bvec)**2)
 
@@ -782,7 +789,7 @@ def ADF_3D_model(params, Xants, Xmax, asym_coeff=0.01):
         # print ("omega_cr = ",omega_cr)
 
         theta_deg = np.rad2deg(theta) 
-        if theta_deg > 110: # < 70° in CR conventions:
+        if theta_deg <70: 
             #print('theta CR', 180-theta_deg)
             omega_cr = min(omega_cr, np.deg2rad(0.6))
 
@@ -925,7 +932,7 @@ def ADF_grad(params, Aants, Xants, Xmax, asym_coeff=0.01,verbose=False):
     nants = Aants.shape[0]
     ct = np.cos(theta); st = np.sin(theta); cp = np.cos(phi); sp = np.sin(phi)
     # Define shower basis vectors
-    K = np.array([st*cp,st*sp,ct])
+    K = np.array([-st*cp,-st*sp,-ct])
     K_plan = np.array([K[0],K[1]])
     KxB = np.cross(K,Bvec); KxB /= np.linalg.norm(KxB)
     KxKxB = np.cross(K,KxB); KxKxB /= np.linalg.norm(KxKxB)

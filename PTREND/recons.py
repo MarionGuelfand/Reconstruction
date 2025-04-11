@@ -8,17 +8,40 @@ import time
 import signal
 import pandas as pd
 from iminuit import minimize
-import argparse
-from scipy.optimize import basinhopping
 from scipy.optimize import differential_evolution
 
+#############################################################################################################@
+"""
+To run the script:
+    python recons.py <recons_type> <data_dir> [<groundAltitude>] [<event_type>]
+
+Arguments:
+    recons_type   : Type of reconstruction to perform.
+                    0 - Plane wave reconstruction
+                    1 - Spherical wave reconstruction
+                    2 - ADF (angular distribution function) reconstruction
+    
+    data_dir      : Path to the directory containing the input files:
+                    - coord_antennas.txt
+                    - Rec_coinctable.txt
+    
+    groundAltitude (optional) : The altitude of the ground, default is 1086m (used for starshape simulations).
+    
+    event_type    (optional) : Specify the type of event:
+                    'background' or 'EAS'.
+                    Default is 'background'.
+                Note:
+    - If event_type is set to 'background', the spherical fit (Xe search) is performed over the entire parameter space.
+    - If event_type is set to 'EAS', the spherical fit is constrained to a conical region
+      around theta_plan in the range +/- 2° and phi_plan in the range +/- 2° (to accelerate computation).
+
+"""
+#############################################################################################################@
+
+
 c_light = 2.997924580e8
-groundAltitude = 1264 #1264
 B_dec = 0.
 B_inc = np.pi/2. + 1.0609856522873529
-
-event_type = "background" #or "EAS"
-print('event type', event_type)
 
 def handler(signum, frame):
     raise TimeoutError("Le temps limite est dépassé.")
@@ -99,7 +122,7 @@ class coincidence_set:
             mask = (coinc_index_array==index)
             # print (mask)
             current_length = np.sum(mask)
-            if current_length>=3:
+            if current_length>=5:
                 # Next line assumes that the antenna coordinate files gives all antennas in order, starting from antenna number=init_ant
                 # This will be needed to get antenna coordinates per coincidence event, from the full list in antenna_set
                 self.antenna_index_array[current_coinc,:self.nants[current_coinc]] = antenna_index_array[mask]-self.ant_set.init_ant
@@ -183,7 +206,8 @@ class setup:
     def write_xmax(self,outfile,coinc,nants,params,chi2):
         fid = open(outfile,'a')
         theta,phi,r_xmax,t_s = params
-        st=np.sin(theta); ct=np.cos(theta); sp=np.sin(phi); cp=np.cos(phi); K = [st*cp,st*sp,ct]
+        st=np.sin(theta); ct=np.cos(theta); sp=np.sin(phi); cp=np.cos(phi); K = [-st*cp,-st*sp,-ct]
+        print('K', K)
         fid.write("%ld %3.0d %12.5le %12.5le %12.5le %12.5le %12.5le %12.5le %12.5le %12.5le %12.5le\n"%(coinc,nants,chi2,np.nan,-r_xmax*K[0],-r_xmax*K[1],groundAltitude-r_xmax*K[2], r_xmax, t_s, np.rad2deg(theta), np.rad2deg(phi)))
         fid.close()
 
@@ -193,8 +217,8 @@ class setup:
         theta,phi,delta_omega,amplitude = params
         theta_err, phi_err, delta_omega_err, amplitude_err = errors
         format_string = "%ld %3.0d "+"%12.5le "*8+"\n"
-        fid.write(format_string%(coinc,nants,180-np.rad2deg(theta),np.rad2deg(theta_err),
-            (180+np.rad2deg(phi))%360,np.rad2deg(phi_err),chi2, np.nan,delta_omega,amplitude))
+        fid.write(format_string%(coinc,nants,np.rad2deg(theta),np.rad2deg(theta_err),
+            np.rad2deg(phi),np.rad2deg(phi_err),chi2, np.nan,delta_omega,amplitude))
         fid.close()
 
     def write_amplitude_residuals(self, outfile_res, coinc, nants, amplitude_simu, residuals, amplitude_recons, eta_recons, omega_recons, omega_cr, coord, n0, delta_n, alpha, alpha_bis):
@@ -223,17 +247,30 @@ class setup:
 
 def main():
 
-    if (len(sys.argv) != 3):
-        print ("Usage: python recons.py <recons_type> <data_dir> ")
-        print ("recons_type = 0 (plane wave), 1 (spherical wave), 2 (ADF)")
-        print ("data_dir is the directory containing the coincidence files")
-        sys.exit(1)
+    #if (len(sys.argv) != 3):
+    #    print ("Usage: python recons.py <recons_type> <data_dir> ")
+    #    print ("recons_type = 0 (plane wave), 1 (spherical wave), 2 (ADF)")
+    #    print ("data_dir is the directory containing the coincidence files")
+    #    sys.exit(1)
 
     recons_type = int(sys.argv[1])
     data_dir = sys.argv[2]
 
+    if len(sys.argv) > 3:
+        groundAltitude = float(sys.argv[3])
+    else:
+        groundAltitude = 1086  #2064 for DC2
+
+    if len(sys.argv) > 4:
+        event_type = sys.argv[4] #'background' or 'EAS'
+    else:
+        event_type = 'background'  
+
+
     print('recons_type = ',recons_type)
     print('data_dir = ',data_dir)
+    print('groundAlitude = ', groundAltitude)
+    print('event_type = ',event_type)
 
     # Read antennas indices and coordinates
     an = antenna_set(data_dir+'/coord_antennas.txt')
@@ -290,31 +327,34 @@ def main():
                     # Read angles obtained with PWF reconstruction
                     l = fid_input_angles.readline().strip().split()
                     if l != 'nan':
-                        theta_in = 180-float(l[2])
-                        phi_in   = (180+float(l[4]))%360
+                        theta_in = float(l[2])
+                        phi_in   = float(l[4])
                         if event_type == "EAS":
                             bounds = [[np.deg2rad(theta_in-2),np.deg2rad(theta_in+2)],
                                 [np.deg2rad(phi_in-2),np.deg2rad(phi_in+2)], 
-                               [-15.6e3 - 12.3e3/np.cos(np.deg2rad(theta_in)),-6.1e3 - 15.4e3/np.cos(np.deg2rad(theta_in))],
-                              [6.1e3 + 15.4e3/np.cos(np.deg2rad(theta_in)),0]]   
+                               [-15.6e3 - 12.3e3/np.cos(np.deg2rad(180 - theta_in)),-6.1e3 - 15.4e3/np.cos(np.deg2rad(180 - theta_in))],
+                              [6.1e3 + 15.4e3/np.cos(np.deg2rad(180 - theta_in)),0]]   
                         if event_type == "background":
                             bounds = [[np.deg2rad(0),np.deg2rad(180)],
                                 [np.deg2rad(0),np.deg2rad(360)], 
-                               [0, 20000],
-                              [-20000, 0]]
+                               [0, 2000000],
+                              [-2000000, 0]]
                                                        
                         params_in = np.array(bounds).mean(axis=1)
+                        print('params in', np.rad2deg(params_in[0]), np.rad2deg(params_in[1]))
+                        
                         args=(co.antenna_coords_array[current_recons,:co.nants[current_recons]],co.peak_time_array[current_recons,:co.nants[current_recons]],False)
                         # Test value of gradient, compare to finite difference estimate
-                        #method = 'L-BFGS-B' 
+                        method = 'L-BFGS-B' 
                         #res = so.minimize(SWF_loss,params_in,args=args,bounds=bounds,method=method,options={'ftol':1e-13})
                         #print('xxxxx')
                         #res = so.minimize(SWF_loss,res.x,args=args,bounds=bounds,method='Nelder-Mead',options={'maxiter':400})
                         #method = 'migrad'
                         #print('Minimize using %s'%method)   
                         res = differential_evolution(SWF_loss, bounds, args=args, maxiter=1000, tol=1e-6, mutation=(0.5, 1), 
-                                                        recombination=0.7,  seed=42,   disp=True) #True to display the func at each iteration
+                                                        recombination=0.7,  seed=42,   disp=False) #True to display the func at each iteration
                         params_out = res.x
+                        print('params out', np.rad2deg(params_out[0]), np.rad2deg(params_out[1]))
                         
                         #Compute errors with numerical estimate of Hessian matrix, inversion and sqrt of diagonal terms
                         if (st.compute_errors):
@@ -324,8 +364,8 @@ def main():
                         else:
                             errors = np.array([np.nan]*2)      
 
-                        #print ("Best fit parameters = ",*np.rad2deg(params_out[:2]),*params_out[2:])
-                        #print ("Chi2 at best fit = ",SWF_loss(params_out,*args,False))
+                        print ("Best fit parameters = ",*np.rad2deg(params_out[:2]),*params_out[2:])
+                        print ("Chi2 at best fit = ",SWF_loss(params_out,*args,False))
             
                         #print ("Chi2 at best fit \pm errors = ",SWF_loss(params_out+errors,*args),SWF_loss(params_out-errors,*args))
                         # Write down results to file 
@@ -369,8 +409,8 @@ def main():
                 begining_time = time.time()
                 #Read angles from PWF simulation
                 l = fid_input_angles.readline().strip().split()
-                theta_in = 180-float(l[2])
-                phi_in   = (180+float(l[4]))%360
+                theta_in = float(l[2])
+                phi_in   = float(l[4])
                 l = fid_input_xmax.readline().strip().split()
                 #here, reconstructed Xsource
                 Xmax = np.array([float(l[4]),float(l[5]),float(l[6])])
