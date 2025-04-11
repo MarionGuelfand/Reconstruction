@@ -1,3 +1,5 @@
+#EventID | Number of triggered antennas | Zenith ADF (°) | Error zenith | Azimuth ADF (°) | error azimuth | Chi2 | Nan | Width | Scaling factor
+
 22121122071  58  6.77370e+01          nan  1.80027e+02          nan  5.56117e+03          nan  3.00000e+00  3.40549e+06 
 22121122072  33  6.77328e+01          nan  1.80040e+02          nan  7.85459e+02          nan  3.00000e+00  3.18824e+06 
 22121170062  13  6.29255e+01          nan  1.80155e+02          nan  1.30527e+02          nan  3.00000e+00  2.09506e+06 

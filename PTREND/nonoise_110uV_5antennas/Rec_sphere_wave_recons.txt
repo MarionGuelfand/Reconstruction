@@ -1,3 +1,5 @@
+#EventID | Number of triggered antennas | chi2 | Nan | x Xsource (m) | y Xsource (m) | z Xsource (m) | XsourceDistanceRec (m) | emission time*c (m)| zenith sphere (°) | azimuth sphere(°)
+
 22121122071  58  9.94861e-02          nan -2.39950e+04 -3.64713e-01  1.09026e+04  2.59254e+04 -2.41084e+04  6.77501e+01  1.80001e+02
 22121122072  33  7.04728e-02          nan -2.46412e+04  3.97081e-01  1.11674e+04  2.66238e+04 -2.57811e+04  6.77491e+01  1.79999e+02
 22121170062  13  2.93142e-02          nan -1.69685e+04 -1.70985e+00  9.74023e+03  1.90479e+04 -1.85744e+04  6.29776e+01  1.80006e+02

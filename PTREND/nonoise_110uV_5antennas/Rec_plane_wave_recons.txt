@@ -1,3 +1,5 @@
+#Event ID | Number of triggered antennas | Zenith plan (°) | Error Zenith| Azimuth plan (°) | Error Azimuth | Chi2 | nan (for now a lot of nan but will be changed)
+
 22121122071  58  6.77814e+01          nan  1.80004e+02          nan          nan          nan
 22121122072  33  6.77729e+01          nan  1.80006e+02          nan          nan          nan
 22121170062  13  6.29772e+01          nan  1.80064e+02          nan          nan          nan

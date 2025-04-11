@@ -1,3 +1,5 @@
+#EventID | Zenith (°) | Azimuth (°) | Primary energy (EeV) | Em energy (EeV) | Nature primary (2212=Proton) | XmaxDistance (m) | Xmax distance (g/cm^2) | x Xmax (m) | y Xmax (m) | z Xmax(m) | Number of triggered antennas | trigger condition on amplitude=110uV/m | trigger condition on antenna = min 5 antennas 
+
 22121122071 67.75 180.0 0.07943 0.0695049774316406 2212 24085.78 677.41 -22292.36 0.0 10206.05 58 110 5
 22121122072 67.75 180.0 0.07943 0.0659301140429687 2212 25344.15 628.19 -23457.04 0.0 10682.53 33 110 5
 22121170062 62.97999999999999 180.0 0.0631 0.0549970303671875 2212 17880.960000000003 663.98 -15929.22 0.0 9209.35 13 110 5
