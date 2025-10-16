@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 
 def main():
     # --- Paths ---
-    #output_directory = '/Users/mguelfan/Documents/GRAND/ADF_DC2/output_recons_DC2/CR_candidates/efield/new/noZchannel/'
     output_directory = '/Users/mguelfan/Documents/GRAND/ADF_DC2/output_recons_DC2/CR_candidates/voltage_chi2adf_incertitude/'
     figures_dir = os.path.join(output_directory, 'Figures')
     os.makedirs(figures_dir, exist_ok=True)
