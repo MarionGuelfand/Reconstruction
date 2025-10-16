@@ -29,7 +29,7 @@ B_dec = 0.
 B_inc = np.pi/2. + 1.0609856522873529
 # Magnetic field direction (unit) vector
 Bvec = np.array([np.sin(B_inc)*np.cos(B_dec),np.sin(B_inc)*np.sin(B_dec),np.cos(B_inc)])
-
+#Bvec = np.array([0.47238508, -0.00242812, -0.88138893])
 kwd = {"fastmath": {"reassoc", "contract", "arcp"}}
 
 # Simple numba example
@@ -603,6 +603,7 @@ def ADF_3D_parameters(params, Aants, Xants, Xmax, asym_coeff=0.01):
     omega_cr_analytic_array = np.zeros(nants)
     omega_cr_analytic_effectif_array = np.zeros(nants)
     omega_cerenkov_simu_array = np.zeros(nants)
+    l_ant_array = np.zeros(nants)
     Xb = Xmax - 2.0e3*K
     Xa = Xmax + 2.0e3*K
     for i in range(nants):
@@ -636,8 +637,9 @@ def ADF_3D_parameters(params, Aants, Xants, Xmax, asym_coeff=0.01):
         omega_cr_analytic_array[i] = omega_cr_analytic
         omega_cr_analytic_effectif_array[i] = omega_cr_analytic_effectif
         omega_cerenkov_simu_array[i]= omega_cr
+        l_ant_array[i]= l_ant
 
-    return(eta_array, omega_array, omega_cerenkov_simu_array, omega_cr_analytic_array, omega_cr_analytic_effectif_array)  
+    return(eta_array, omega_array, omega_cerenkov_simu_array, omega_cr_analytic_array, l_ant_array)  
 
 @njit(**kwd)
 def ADF_3D_loss(params, Aants, Xants, Xmax, asym_coeff=0.01, verbose=False):
@@ -719,8 +721,8 @@ def ADF_3D_loss(params, Aants, Xants, Xmax, asym_coeff=0.01, verbose=False):
         adf = amplitude/l_ant / (1.+4.*( ((np.tan(omega)/np.tan(omega_cr))**2 - 1. )/delta_omega)**2)
         adf *= 1. + asym*np.cos(eta) # 
         # Chi2
-        tmp += (Aants[i]-adf)**2
-        #tmp += (Aants[i]-adf)**2/(0.075*Aants[i])**2 #divide by uncertainties (7.5% for DC2 simulations)
+        #tmp += (Aants[i]-adf)**2
+        tmp += (Aants[i]-adf)**2/(0.075*Aants[i])**2 #divide by uncertainties (7.5% for DC2 simulations)
     chi2 = tmp
     if (verbose):
         print ("params = ",np.rad2deg(params[:2]),params[2:]," Chi2 = ",chi2)

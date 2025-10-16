@@ -40,9 +40,6 @@ Arguments:
 
 
 c_light = 2.997924580e8
-B_dec = 0.
-B_inc = np.pi/2. + 1.0609856522873529
-
 def handler(signum, frame):
     raise TimeoutError("Le temps limite est dépassé.")
 signal.signal(signal.SIGALRM, handler)
@@ -102,7 +99,7 @@ class coincidence_set:
         for index in coinc_indices:
             current_mask = (coinc_index_array==index)
             current_length = np.sum(current_mask)
-            if current_length>=2:
+            if current_length>=3:
                 self.nants[self.ncoincs] = current_length
                 self.nantsmax = np.maximum(self.nantsmax, current_length)
                 self.ncoincs += 1
@@ -122,7 +119,7 @@ class coincidence_set:
             mask = (coinc_index_array==index)
             # print (mask)
             current_length = np.sum(mask)
-            if current_length>=5:
+            if current_length>=3:
                 # Next line assumes that the antenna coordinate files gives all antennas in order, starting from antenna number=init_ant
                 # This will be needed to get antenna coordinates per coincidence event, from the full list in antenna_set
                 self.antenna_index_array[current_coinc,:self.nants[current_coinc]] = antenna_index_array[mask]-self.ant_set.init_ant
@@ -236,13 +233,13 @@ class setup:
             fid.write(f"{coinci}\t{n}\t{s}\t{r}\t{a}\t{e}\t{o}\t{o_cr}\t{c[0]}\t{c[1]}\t{c[2]}\t{n_0}\t{d_n}\t{alph}\t{alph_b}\n")
         fid.close()
 
-    def write_ADF_parameters_3D(self, outfile_res, coinc, nants, amplitude_simu, amplitude_recons, eta_recons, omega_recons, omega_cr, omega_cr_analytic, omega_cr_analytic_effectif, coord):
+    def write_ADF_parameters_3D(self, outfile_res, coinc, nants, amplitude_simu, amplitude_recons, eta_recons, omega_recons, omega_cr, omega_cr_analytic, l_ant_array, coord):
     #def write_amplitude_residuals(self, outfile_res, coinc, nants, residuals, amplitude_recons, eta_recons, omega_recons, coord):
         fid = open(outfile_res,'a')
         coinc = [coinc] * len(amplitude_simu)
         nants = [nants] * len(amplitude_simu)
-        for coinci, n, s, a, e, o, o_cr, o_cr_ana, o_cr_ana_eff, c in zip(coinc, nants, amplitude_simu, amplitude_recons, eta_recons, omega_recons, omega_cr, omega_cr_analytic, omega_cr_analytic_effectif, coord):
-            fid.write(f"{coinci}\t{n}\t{s}\t{a}\t{e}\t{o}\t{o_cr}\t{o_cr_ana}\t{o_cr_ana_eff}\t{c[0]}\t{c[1]}\t{c[2]}\n")
+        for coinci, n, s, a, e, o, o_cr, o_cr_ana, l_ant, c in zip(coinc, nants, amplitude_simu, amplitude_recons, eta_recons, omega_recons, omega_cr, omega_cr_analytic, l_ant_array, coord):
+            fid.write(f"{coinci}\t{n}\t{s}\t{a}\t{e}\t{o}\t{o_cr}\t{o_cr_ana}\t{l_ant}\t{c[0]}\t{c[1]}\t{c[2]}\n")
         fid.close()
 
 def main():
@@ -330,8 +327,8 @@ def main():
                         theta_in = float(l[2])
                         phi_in   = float(l[4])
                         if event_type == "EAS":
-                            bounds = [[np.deg2rad(theta_in-2),np.deg2rad(theta_in+2)],
-                                [np.deg2rad(phi_in-2),np.deg2rad(phi_in+2)], 
+                            bounds = [[np.deg2rad(theta_in-5),np.deg2rad(theta_in+5)],
+                                [np.deg2rad(phi_in-5),np.deg2rad(phi_in+5)], 
                                [-15.6e3 - 12.3e3/np.cos(np.deg2rad(180 - theta_in)),-6.1e3 - 15.4e3/np.cos(np.deg2rad(180 - theta_in))],
                               [6.1e3 + 15.4e3/np.cos(np.deg2rad(180 - theta_in)),0]]   
                         if event_type == "background":
@@ -414,9 +411,10 @@ def main():
                 l = fid_input_xmax.readline().strip().split()
                 #here, reconstructed Xsource
                 Xmax = np.array([float(l[4]),float(l[5]),float(l[6])])
-                bounds = [[np.deg2rad(theta_in-2),np.deg2rad(theta_in+2)],
-                            [np.deg2rad(phi_in-1),np.deg2rad(phi_in+1)],
+                bounds = [[np.deg2rad(theta_in-5),np.deg2rad(theta_in+5)],
+                            [np.deg2rad(phi_in-5),np.deg2rad(phi_in+5)],
                             [1.25, 3.0],
+                           #[1, 3.5],
                             [1e6,1e10]]
                 params_in = np.array(bounds).mean(axis=1)
 
@@ -428,9 +426,10 @@ def main():
                 args = (co.peak_amp_array[current_recons,:co.nants[current_recons]],co.antenna_coords_array[current_recons,:co.nants[current_recons]],Xmax, 0.01, False)
                 res = minimize(ADF_3D_loss, params_in, args=args, method='migrad', bounds=bounds)
                 params_out = res.x
-                eta, omega, omega_cr, omega_cr_analytic, omega_cr_analytic_effectif = ADF_3D_parameters(params_out,co.peak_amp_array[current_recons,:co.nants[current_recons]], co.antenna_coords_array[current_recons,:co.nants[current_recons]],Xmax, asym_coeff=0.01)
+                eta, omega, omega_cr, omega_cr_analytic, l_ant_array = ADF_3D_parameters(params_out,co.peak_amp_array[current_recons,:co.nants[current_recons]], co.antenna_coords_array[current_recons,:co.nants[current_recons]],Xmax, asym_coeff=0.01)
+                #print('l_ant', l_ant_array)
                 amplitude_recons = ADF_3D_model(params_out, co.antenna_coords_array[current_recons,:co.nants[current_recons]], Xmax, asym_coeff=0.01)
-                st.write_ADF_parameters_3D(st.outfile_res, co.coinc_index_array[current_recons, 0], co.nants[current_recons], co.peak_amp_array[current_recons,:co.nants[current_recons]], amplitude_recons, eta*180/np.pi, omega*180/np.pi, omega_cr*180/np.pi, omega_cr_analytic*180/np.pi, omega_cr_analytic_effectif*180/np.pi, co.antenna_coords_array[current_recons,:co.nants[current_recons]])
+                st.write_ADF_parameters_3D(st.outfile_res, co.coinc_index_array[current_recons, 0], co.nants[current_recons], co.peak_amp_array[current_recons,:co.nants[current_recons]], amplitude_recons, eta*180/np.pi, omega*180/np.pi, omega_cr*180/np.pi, omega_cr_analytic*180/np.pi, l_ant_array, co.antenna_coords_array[current_recons,:co.nants[current_recons]])
 
                 # Compute errors with numerical estimates of Hessian matrix, inversion and sqrt of diagonal terms
                 # hess = nd.Hessian(ADF_loss)(params_out,*args)

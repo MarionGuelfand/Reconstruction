@@ -122,10 +122,10 @@ void FitTools::_initFit()
     // Set bounding: 0 <= theta <= pi
     //===
 
-    //_xPORT.B( 1, 1 ) = (_theta_input-2.)*M_PI/180;  // theta parameter (1st) min value (1)
-    //_xPORT.B( 2, 1 ) = (_theta_input+2.)*M_PI/180;  // theta parameter (1st) max value (2)
-    //_xPORT.B( 1, 2 ) = (_phi_input-.1)*M_PI/180;    // phi parameter (2nd) min value (1)
-    //_xPORT.B( 2, 2 ) = (_phi_input+.1)*M_PI/180;    // phi parameter (2nd) max value (2)
+    //_xPORT.B( 1, 1 ) = (_theta_input-5.)*M_PI/180;  // theta parameter (1st) min value (1)
+    //_xPORT.B( 2, 1 ) = (_theta_input+5.)*M_PI/180;  // theta parameter (1st) max value (2)
+    //_xPORT.B( 1, 2 ) = (_phi_input-.5)*M_PI/180;    // phi parameter (2nd) min value (1)
+    //_xPORT.B( 2, 2 ) = (_phi_input+.5)*M_PI/180;    // phi parameter (2nd) max value (2)
     //_xPORT.B( 1, 3) = -15.6e3 - 12.3e3/cos(_theta_input*M_PI/180);    // r parameter (3th) min value (1)
     //_xPORT.B( 2, 3) = -6.1e3 - 15.4e3/cos(_theta_input*M_PI/180);     // r parameter (3th) max value (2)
     //_xPORT.B( 1, 4) = -(-6.1e3 - 15.4e3/cos(_theta_input*M_PI/180));  // t parameter (3th) max value (2) similar to r !
@@ -2777,8 +2777,8 @@ void SWF_function_F( int& N, double* X, int& NF, double* F, int* Na,
       dx_ = Xa[ i*N_ANTENNA_DATA ] - x_xmax;
       dy_ = Xa[ i*N_ANTENNA_DATA + 1] - y_xmax;
       dz_ = Xa[ i*N_ANTENNA_DATA + 2] - z_xmax;
-      //_n = _ZHSEffectiveRefractionIndex(x_xmax, y_xmax, z_xmax, Xa[ i*N_ANTENNA_DATA ], Xa[ i*N_ANTENNA_DATA + 1], Xa[ i*N_ANTENNA_DATA + 2], 325.0, -0.1218);
-      _n=1.;
+      _n = _ZHSEffectiveRefractionIndex(x_xmax, y_xmax, z_xmax, Xa[ i*N_ANTENNA_DATA ], Xa[ i*N_ANTENNA_DATA + 1], Xa[ i*N_ANTENNA_DATA + 2], 325.0, -0.1218);
+      //_n=1.;
       fi =  X[ 4 ]*(Xa[ i*N_ANTENNA_DATA + 3] - X[ 3 ]) - _n*sqrt(dx_*dx_ + dy_*dy_ + dz_*dz_);
       F[ 0 ] += fi*fi;
     }
