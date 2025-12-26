@@ -7,6 +7,7 @@ from scipy.optimize import fsolve
 from solver import newton
 from rotation import rotation
 from scipy.optimize import fsolve, brentq
+from scipy.linalg import cho_factor, cho_solve
 import argparse
 
 
@@ -18,6 +19,7 @@ c_light = 2.997924580e8
 R_earth = 6371007.0
 ns = 325
 kr = -0.1218
+n_atm = 1.000136
     
 if len(sys.argv) > 3:
     groundAltitude = float(sys.argv[3])
@@ -181,6 +183,26 @@ def master_equation(omega, n2, n1, alpha, delta, xmaxDist):
 # SWF: Spherical wave function
 # ADF: Amplitude Distribution Function (see Valentin Decoene's thesis)
 
+def create_times(Xants:np.array, k, sigma=0, c=c_light, n=n_atm):
+    """
+    Producing antenna timings with Gaussian noise of scale $\sigma$.
+
+    Parameters:
+    Xants (ndarray): Antenna positions in meters, shape (nants, 3).
+    k (ndarray): signal propagation direction, shape (3).
+    sigma (float, np.ndarray): Standard deviation of arrival times.
+    c (float): Speed of light in m/s, default is  299792458 m/s
+    n (float or ndarray): Indices of refraction (vector or constant), default is 1.000136
+
+    Returns:
+    ndarray: Theta and phi angles in radians.
+    """
+    assert type(k) is np.ndarray
+    P0 = mean(Xants, sigma)
+    T = (Xants-P0) @ k / (c/n)
+    T += np.random.normal(0, sigma, T.shape)
+    return T
+
 @njit(**kwd)
 def PWF_loss(params, Xants, tants, verbose=False, cr=1.0):
     '''
@@ -225,7 +247,110 @@ def PWF_alternate_loss(params, Xants, tants, verbose=False, cr=1.0):
     # Make sure tants and Xants are compatible
     residuals = PWF_residuals(params, Xants, tants, verbose=verbose, cr=cr)
     chi2 = (residuals**2).sum()
-    return(chi2)
+    #sigma = 5 #5 ns
+    sigma = 3e8*5e-9 #express in m
+    #return(chi2/(sigma**2*(nants-2)))
+    return(chi2/(sigma**2))
+    #return(chi2)
+
+def _inv_cho(A):
+    c, low = cho_factor(A)
+    A_inv = cho_solve((c, low), np.eye(A.shape[0]))
+    return A_inv
+
+
+def mean(X:np.ndarray, sigma=None):
+    if type(sigma) is np.ndarray and sigma.ndim==1:
+        return ( 1/(1/sigma).sum() ) * ( (1/sigma) @ X )
+    elif type(sigma) is np.ndarray and sigma.ndim==2:
+        Q_1 = _inv_cho(sigma)
+        return ( 1/Q_1.sum() ) * ( Q_1.sum(axis=0) @ X )
+    else:
+        return X.mean(axis=0)
+    
+
+
+
+def PWF_semianalytical(Xants, tants, verbose=False, c=c_light, n=n_atm, sigma=None):
+    """
+    Solve the minimization problem using a semi-analytical approach.
+    (see section 2.1.2)
+
+    Parameters:
+    Xants (ndarray): Antenna positions in meters, shape (nants, 3).
+    tants (ndarray): Antenna arrival times in seconds, shape (nants,).
+    verbose (bool): Verbose output, default is False.
+    c (float): Speed of light in m/s, default is  299792458 m/s
+    n (float or ndarray): Indices of refraction (vector or constant), default is 1.000136
+
+    Returns:
+    ndarray: Theta and phi angles in radians.
+    """
+    nants = tants.shape[0]
+
+    if (Xants.shape[0] != nants):
+        print("Shapes of tants and Xants are incompatible", tants.shape, Xants.shape)
+        return None
+
+    PXT = Xants - mean(Xants, sigma)[None, :]
+    # PXT = PXT - mean(PXT, sigma)[None, :]   #twice for numerical stability
+    t_center = tants - mean(tants, sigma)
+    # t_center = t_center - mean(t_center, sigma) #twice for numerical stability
+    print("t_center", t_center)
+    A = np.dot(PXT.T, PXT)
+    b = np.dot(PXT.T, t_center) * c / n
+    d, W = np.linalg.eigh(A)
+    beta = np.dot(b, W)
+    nbeta = np.linalg.norm(beta)
+
+    if (np.abs(beta[0] / nbeta) < 1e-14):
+        if (verbose):
+            print("Degenerate case")
+        mu = -d[0]
+        c_ = np.zeros(3)
+        c_[1] = beta[1] / (d[1] + mu)
+        c_[2] = beta[2] / (d[2] + mu)
+        si = np.sign(np.dot(W[:, 0], np.array([0, 0, 1.])))
+        c_[0] = -si * np.sqrt(1 - c_[1]**2 - c_[2]**2)
+        k_opt = np.dot(W, c_)
+
+    else:
+        def nc(mu):
+            c_ = beta / (d + mu)
+            return ((c_**2).sum() - 1.)
+        mu_min = -d[0] + beta[0]
+        mu_max = -d[0] + np.linalg.norm(beta)
+        mu_opt = brentq(nc, mu_min, mu_max, maxiter=1000)
+        c_ = beta / (d + mu_opt)
+        k_opt = np.dot(W, c_)
+
+    if k_opt[2] > 1e-2:
+        k_opt = k_opt - 2 * (k_opt @ W[:, 0]) * W[:, 0]
+
+    theta_opt = np.arccos(-k_opt[2])
+    phi_opt = np.arctan2(-k_opt[1], -k_opt[0])
+
+    if phi_opt < 0:
+        phi_opt += 2 * np.pi
+    return np.array([theta_opt, phi_opt])
+
+
+
+def chi2_PWF(t_meas, t_PWF, sigma=None):
+    """
+    Calculates the chi-squared value for a time reconstruction - in this case a PWF :)
+    Args:
+        t_meas: A NumPy array of measured (or simulated) times.
+        t_PWF: A NumPy array of reconstructed times.
+    Returns:
+        The chi-squared value (float). 
+    """
+    if sigma is None:
+        # sigma = np.std(t_meas-t_PWF, ddof=2)  #this is bad, chi2 will always be 1
+        sigma = 1                               #Better nothing than something wrong
+    time_diff = t_meas - t_PWF
+    chi2_value = np.sum((time_diff / sigma)**2)
+    return chi2_value
 
 def PWF_minimize_alternate_loss(Xants, tants, verbose=False, cr=1.0):
     '''
@@ -413,10 +538,12 @@ def SWF_loss(params, Xants, tants, verbose=False, log = False, cr=1.0):
         tmp += res*res
 
     chi2 = tmp
+    sigma = 3e8*5e-9
     if (verbose):
         print("theta,phi,r_xmax,t_s = ",theta,phi,r_xmax,t_s)
         print ("Chi2 = ",chi2)
-    return(chi2)
+    #return(chi2/(sigma**2*(nants-3)))
+    return(chi2/(sigma**2))
 
 @njit(**kwd)
 def log_SWF_loss(params, Xants, tants, verbose=False, cr=1.0):
