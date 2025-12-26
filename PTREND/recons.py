@@ -40,6 +40,8 @@ Arguments:
 
 
 c_light = 2.997924580e8
+n_atm = 1.000136
+
 def handler(signum, frame):
     raise TimeoutError("Le temps limite est dépassé.")
 signal.signal(signal.SIGALRM, handler)
@@ -193,10 +195,10 @@ class setup:
         fid.write("%ld %3.0d %12.5le\n"%(coinc, nants, time))
         fid.close()
 
-    def write_angles(self,outfile,coinc,nants,zenith, azimuth):
+    def write_angles(self,outfile,coinc,nants,zenith, azimuth, chi2_pwf):
 
         fid = open(outfile,'a')
-        fid.write("%ld %3.0d %12.5le %12.5le %12.5le %12.8le %12.5le %12.5le\n"%(coinc, nants, zenith, np.nan, azimuth, np.nan, np.nan, np.nan))
+        fid.write("%ld %3.0d %12.5le %12.5le %12.5le %12.8le %12.5le %12.5le\n"%(coinc, nants, zenith, np.nan, azimuth, chi2_pwf, np.nan, np.nan))
         fid.close()
 
     #add theta and phi from SWF
@@ -283,11 +285,16 @@ def main():
             for current_recons in range(co.ncoincs):
                 begining_time = time.time()
                 args=(co.antenna_coords_array[current_recons,: co.nants[current_recons]],co.peak_time_array[current_recons,:co.nants[current_recons]])
-                theta_pwf_rad, phi_pwf_rad = PWF_minimize_alternate_loss(co.antenna_coords_array[current_recons,:co.nants[current_recons]], co.peak_time_array[current_recons,:co.nants[current_recons]], cr=1.000136)                        
+                #theta_pwf_rad, phi_pwf_rad = PWF_minimize_alternate_loss(co.antenna_coords_array[current_recons,:co.nants[current_recons]], co.peak_time_array[current_recons,:co.nants[current_recons]], cr=1.000136)  
+                theta_pwf_rad, phi_pwf_rad = PWF_semianalytical(co.antenna_coords_array[current_recons,:co.nants[current_recons]], co.peak_time_array_in_s[current_recons,:co.nants[current_recons]], verbose=False, c=c_light, n=n_atm, sigma=5)  
                 theta_pwf = np.rad2deg(theta_pwf_rad)
                 phi_pwf = np.rad2deg(phi_pwf_rad)
                 print(co.nants[current_recons])
-
+                sint=np.sin(theta_pwf_rad); cost=np.cos(theta_pwf_rad); sinp=np.sin(phi_pwf_rad); cosp=np.cos(phi_pwf_rad); k = np.array([-sint*cosp, -sint*sinp, -cost]) 
+                #t_PWF = create_times(co.antenna_coords_array[current_recons,:co.nants[current_recons]], k, sigma=5, c=c_light, n=n_atm)
+                #chi2_pwf = chi2_PWF(co.peak_time_array_in_s[current_recons,:co.nants[current_recons]], t_PWF, sigma=5)
+                params_out = theta_pwf_rad, phi_pwf_rad
+                chi2_pwf = PWF_alternate_loss(params_out,*args)
                 if (st.compute_errors):
                     args=(co.antenna_coords_array[current_recons,:],co.peak_time_array[current_recons,:])
                     errors = np.sqrt(np.diag(np.linalg.inv(hess)))
@@ -295,17 +302,20 @@ def main():
                    errors = np.array([np.nan]*2)
                 print (f"Best fit parameters = ", {theta_pwf}, " ", {phi_pwf})
                 
+                
                 ## Errors computation needs work: errors are coming both from noise on amplitude and time measurements
                 #if (st.compute_errors):
                 #    print ("Errors on parameters (from Hessian) = ",np.rad2deg(errors))
-                #print ("Chi2 at best fit = ",PWF_alternate_loss(params_out,*args))
+                print ("Chi2 at best fit = ",PWF_alternate_loss(params_out,*args))
+                #print ("Chi2 at best fit = ",chi2_pwf)
+                #chi2_pwf = PWF_alternate_loss(params_out,*args)
                 #print ("Chi2 at best fit \pm errors = ",PWF_loss(params_out+errors,*args),PWF_loss(params_out-errors,*args))
                 
                 end_time = time.time()
                 plane_time = end_time - begining_time
                 
                 # Write down results to file
-                st.write_angles(st.outfile,co.coinc_index_array[current_recons,0],co.nants[current_recons], theta_pwf, phi_pwf)
+                st.write_angles(st.outfile,co.coinc_index_array[current_recons,0],co.nants[current_recons], theta_pwf, phi_pwf, chi2_pwf)
                 st.write_timing(st.outfile_convergence, co.coinc_index_array[current_recons,0], co.nants[current_recons], plane_time)
 
     if (st.recons_type==1):
@@ -338,7 +348,7 @@ def main():
                               [-2000000, 0]]
                                                        
                         params_in = np.array(bounds).mean(axis=1)
-                        print('params in', np.rad2deg(params_in[0]), np.rad2deg(params_in[1]))
+                        #print('params in', np.rad2deg(params_in[0]), np.rad2deg(params_in[1]))
                         
                         args=(co.antenna_coords_array[current_recons,:co.nants[current_recons]],co.peak_time_array[current_recons,:co.nants[current_recons]],False)
                         # Test value of gradient, compare to finite difference estimate
@@ -351,7 +361,7 @@ def main():
                         res = differential_evolution(SWF_loss, bounds, args=args, maxiter=1000, tol=1e-6, mutation=(0.5, 1), 
                                                         recombination=0.7,  seed=42,   disp=False) #True to display the func at each iteration
                         params_out = res.x
-                        print('params out', np.rad2deg(params_out[0]), np.rad2deg(params_out[1]))
+                        #print('params out', np.rad2deg(params_out[0]), np.rad2deg(params_out[1]))
                         
                         #Compute errors with numerical estimate of Hessian matrix, inversion and sqrt of diagonal terms
                         if (st.compute_errors):
@@ -373,17 +383,13 @@ def main():
                         st.write_timing(st.outfile_convergence,co.coinc_index_array[current_recons,0],co.nants[current_recons], sphere_time)
                         i+=1          
 
-                except TimeoutError as e:
-                    print("Timeout error", e) 
-                    continue
+                except Exception as e:
+                # Capture toutes les exceptions possibles
+                    print(f"Exception for coincidence {co.coinc_index_array[current_recons, 0]}: {e}")
+                    nants = co.nants[current_recons]
+                    nan_params = [np.nan, np.nan, np.nan, np.nan]  # theta, phi, r_xmax, t_s
+                    st.write_xmax(st.outfile, co.coinc_index_array[current_recons, 0], nants, nan_params, np.nan)
 
-                except ValueError as e:
-                    print("Value error", e) 
-                    continue 
-
-                except MemoryError as e:
-                    print("Memoryerror :", e)
-                    continue
                     
 
                 finally:
@@ -409,6 +415,7 @@ def main():
                 theta_in = float(l[2])
                 phi_in   = float(l[4])
                 l = fid_input_xmax.readline().strip().split()
+                #print(l)
                 #here, reconstructed Xsource
                 Xmax = np.array([float(l[4]),float(l[5]),float(l[6])])
                 bounds = [[np.deg2rad(theta_in-5),np.deg2rad(theta_in+5)],
@@ -447,6 +454,36 @@ def main():
 
             except ZeroDivisionError as erreur:
                 print("ZeroDivisionError :", erreur)
+                nants = co.nants[current_recons]
+                nan_params = [np.nan]*4       # theta, phi, delta_omega, amplitude
+                nan_errors = [np.nan]*4       # theta_err, phi_err, delta_omega_err, amplitude_err
+                chi2_nan = np.nan
+
+                # écriture dans le fichier ADF avec juste l'ID correct
+                st.write_adf(
+                st.outfile_before_after_Xmax,
+                co.coinc_index_array[current_recons, 0],  # coincidence ID
+                nants,
+                nan_params,
+                nan_errors,
+                chi2_nan
+            )
+            except Exception as erreur:
+                print("Error in reconstruction for current_recons", current_recons, ":", erreur)
+                # Write NaNs but keep coincidence ID correct
+                nants = co.nants[current_recons]
+                nan_params = [np.nan]*4
+                nan_errors = [np.nan]*4
+                chi2_nan = np.nan
+
+                st.write_adf(
+                st.outfile_before_after_Xmax,
+                co.coinc_index_array[current_recons,0],
+                nants,
+                nan_params,
+                nan_errors,
+                chi2_nan
+                )
 
         return
 
