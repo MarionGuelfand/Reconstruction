@@ -5,7 +5,6 @@ This repository contains the full data processing pipeline for GRAND cosmic-ray 
 It includes modules for:
 
 - **Data extraction** from ROOT files (antenna coordinates, peak amplitudes, times)
-- **Quality control** of DUs: number of DUs triggered in a given ROOT file
 - **Reconstruction** of events (with PWF, SWF, ADF)
 - **Analysis** of reconstructed events
 
@@ -44,4 +43,5 @@ and check which DUs are alive or dead.
 | Info_rootfile.txt | Unique event ID, ROOT file, Run nr, Last nr, Event nr | Traceability |
 | events_CD_all_events.txt | Unique event ID, Nb antennas triggered, DU IDs triggered | Detector performance |
 
+**See examples of these txt files in:** `Data_processing/examples/`
 
