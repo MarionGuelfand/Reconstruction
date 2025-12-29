@@ -55,7 +55,8 @@ and check which DUs are alive or dead.
 ### Reconstruction Outputs (`Recons/`)
 
 - **`recons.py`** – performs reconstruction (plane wave, spherical wave, or ADF) from coincidence tables and antenna coordinates.  
-  Run **`main.py`** (and **`main_cd_process.py`**) first to generate the input files (`coord_antennas.txt` and `Rec_coinctable.txt`).  
+  Run **`main.py`** (and **`main_cd_process.py`**) first to generate the input files (`coord_antennas.txt` and `Rec_coinctable.txt`).
+- Use **code PTREND** (Python version) (**TREND** (original C++ version from V. Decoene) for the reconstruction routines.)
 
 | File | Columns | Notes |
 |------|--------|------|
