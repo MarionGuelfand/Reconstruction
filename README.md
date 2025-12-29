@@ -24,3 +24,24 @@ and check which DUs are alive or dead.
 
 ├── config.py # Configuration paths and parameters
 
+## Output Files Details
+
+- **Data processing**
+
+- **`main.py`** – processes flagged events and generates:
+  - `coord_antennas.txt`
+  - `coord_antennas_withID.txt`
+  - `Rec_coinctable.txt`
+  - `Info_rootfile.txt`
+- **`main_cd_process.py`** – processes all CD ROOT file containing the flagged events and generates:
+  - `events_CD_all_events.txt` to check which DUs are alive in the corresponding ROOT file
+
+| File | Columns | Notes |
+|------|--------|------|
+| coord_antennas.txt | Internal counter, x, y, z, Event nr, Run nr | All antennas that triggered |
+| coord_antennas_withID.txt | + Real antenna ID | Same as above |
+| Rec_coinctable.txt | Internal counter, Unique event ID, Peak time, Peak amplitude, Event nr, Run nr | Coincidence analysis |
+| Info_rootfile.txt | Unique event ID, ROOT file, Run nr, Last nr, Event nr | Traceability |
+| events_CD_all_events.txt | Unique event ID, Nb antennas triggered, DU IDs triggered | Detector performance |
+
+
