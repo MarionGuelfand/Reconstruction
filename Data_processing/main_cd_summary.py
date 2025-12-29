@@ -42,7 +42,7 @@ def main_cd_summary(job=False):
 
     else:  # Manual mode: parameters set in script
         start_line = 1
-        stop_line = 100  # Set to None to process until end
+        stop_line = 5  # Set to None to process until end
         flagged_txt = conf.flagged_txt
         output_recons = conf.output_recons
 

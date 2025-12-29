@@ -598,7 +598,6 @@ def compute_injection_point(azimuth, zenith, injection_height, shower_core_heigh
     phi = np.deg2rad(azimuth)
     
     # Shower direction unit vector
-    # I added minus sign
     k_shower = np.array([
         np.sin(theta) * np.cos(phi),
         np.sin(theta) * np.sin(phi),

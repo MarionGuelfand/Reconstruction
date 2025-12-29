@@ -79,7 +79,7 @@ def main(job = False):
     # --------------------------
     else:
         start_line = 1
-        stop_line = 2
+        stop_line = 5
         output_recons = conf.output_recons
         flagged_txt = conf.flagged_txt
 
