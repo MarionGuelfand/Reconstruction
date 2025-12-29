@@ -59,13 +59,13 @@ and check which DUs are alive or dead.
 
 | File | Columns | Notes |
 |------|--------|------|
-| `Rec_plane_wave_recons.txt` | Coincidence ID, Nb antennas, Zenith (deg), Phi (deg), placeholders, Chi2 | Plane wave reconstruction (PWF): direction fit for each coincidence |
-| `Rec_plane_time.txt` | Coincidence ID, Nb antennas, Processing time (s) | Time spent per plane wave fit |
-| `Rec_sphere_wave_recons.txt` | Coincidence ID, Nb antennas, Reconstructed theta, phi, r_xmax, t_s, ... | Spherical wave reconstruction (SWF) using PWF as input |
-| `Rec_sphere_time.txt` | Coincidence ID, Nb antennas, Processing time (s) | Time spent per spherical fit |
-| `Rec_adf_recons.txt` | Coincidence ID, Nb antennas, theta, phi, delta_omega, amplitude | ADF 3D reconstruction parameters |
-| `Rec_adf_time.txt` | Coincidence ID, Nb antennas, Processing time (s) | Time spent per ADF fit |
-| `Rec_adf_parameters.txt` | Coincidence ID, Nb antennas, amplitude_simu, amplitude_recons, eta, omega, omega_cr, omega_cr_analytic, l_ant_array, coordinates | Detailed ADF parameters and reconstructed amplitudes |
+| `Rec_plane_wave_recons.txt` | Unique event ID, Nb antennas, Zenith (deg), NaN, Azimuth (deg), Chi2, NaN, NaN | Plane wave reconstruction (PWF): direction fit for each coincidence |
+| `Rec_plane_time.txt` | Unique event ID, Nb antennas, Processing time (s) | Time spent per plane wave fit |
+| `Rec_sphere_wave_recons.txt` |  Coincidence ID, Nb antennas, Chi², NaN, x (Xsource m), y (Xsource m), z (Xsource m), r_xmax (m), t_s (m), Zenith (deg), Azimuth (deg) | Spherical wave reconstruction (SWF) using PWF as input |
+| `Rec_sphere_time.txt` | Unique event ID, Nb antennas, Processing time (s) | Time spent per spherical fit |
+| `Rec_adf_recons.txt` | Unique event ID, Nb antennas, Theta (deg), Theta_err (deg), Phi (deg), Phi_err (deg), Chi², NaN, DeltaOmega, Amplitude | ADF 3D reconstruction parameters |
+| `Rec_adf_time.txt` | Unique event ID, Nb antennas, Processing time (s) | Time spent per ADF fit |
+| `Rec_adf_parameters.txt` | Unique event ID, Nb antennas, Measured amplitude (ADC, uV, uV/m), Reconstructed amplitude (ADC, uV, uV/m), Eta (deg), Omega (deg), Omega_CR (deg), Omega_CR_analytic (toy model), Distance l_ant (antenna-Xsource), x (antenna coordinate, m), y (antenna coordinate, m), z (antenna coordinate, m) | Detailed ADF parameters and reconstructed amplitudes |
 
 **Notes on structure:**
 
