@@ -75,4 +75,4 @@ and check which DUs are alive or dead.
 - Times are in **seconds**, distances in **meters**, angles in **degrees**.  
 - `Rec_adf_parameters.txt` contains arrays per coincidence; each line corresponds to a single antenna’s contribution to the ADF model.  
 
-**See examples of these txt files in:** `Recons/examples/`
+**See examples of these txt files in:** `Recons/PTREND/nonoise_110uV_5antennas/`
