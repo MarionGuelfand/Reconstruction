@@ -113,6 +113,12 @@ def compute_shower_axis(theta, phi):
     K = np.array([-st*cp, -st*sp, -ct])      # shape (3,)
     return K
 
+def get_sin_alpha(zenith, azimuth, B_inc, B_dec):
+    k = compute_shower_axis(zenith, azimuth) 
+    B = np.array([np.cos(B_dec)*np.sin(B_inc), np.sin(B_dec)*np.sin(B_inc), np.cos(B_inc)])
+    sin_alpha = np.linalg.norm(np.cross(k.T, B), axis=1)
+    return sin_alpha
+
 def generate_cone_surface_vectors(k, omega, n=10):
     """
     Generate vectors uniformly distributed on a cone surface.
@@ -219,6 +225,10 @@ def compute_core(k,xs,refAlt,disp=False):
         plt.show()
 
     return(xc)
+
+def height_Xsource(X0):
+    R02 = X0[0]**2 + X0[1]**2
+    return np.sqrt((X0[2] + R_earth)**2 + R02) - R_earth
 
 def ZHSEffectiveRefractionIndex(X0,Xa):
     """
@@ -510,7 +520,7 @@ def get_density(height, model='linsley'):
             idx = np.where((height >= hl[:-1]) & (height < hl[1:]))[0][0]
             rho = bl[idx]/cl[idx] * np.exp(-height/cl[idx])
 
-    elif model == 'chao':
+    elif model == 'grand_atm':
         bl = np.array([12586., 11701.8, 12289.6, 12288.9, 10])
         cl = np.array([10653.3, 9494.97, 6962.43, 6962.57, 1e7])
         hl = np.array([3.689, 9.378, 26.299, 100., 113])*1e3
