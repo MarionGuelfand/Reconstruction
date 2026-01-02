@@ -127,7 +127,7 @@ The energy reconstruction is performed in two steps:
 - Saves the trained model for later use
 
 **Outputs:** 
-- `coefficients.pkl` and `coefficients.csv` – regression coefficients to compute *f(ρ_air, sin(α))*
+- `correction_coefficients.pkl` and `correction_coefficients.csv` – regression coefficients to compute *f(ρ_air, sin(α))*
 
 
 ### 2. Energy Reconstruction (`reconstruction.py`)
