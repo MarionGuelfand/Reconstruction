@@ -76,3 +76,74 @@ and check which DUs are alive or dead.
 - `Rec_adf_parameters.txt` contains arrays per coincidence; each line corresponds to a single antenna’s contribution to the ADF model.  
 
 **See examples of these txt files in:** `Recons/PTREND/nonoise_110uV_5antennas/`
+
+## Energy Reconstruction (`Energy_recons/`)
+
+This directory contains the pipeline used to reconstruct the **cosmic-ray (primary or electromagnetic) energy**
+from the reconstructed electric-field amplitude, accounting for geomagnetic and atmospheric effects.
+
+The energy estimator is defined as:
+
+E_recons = A / ( sin(alpha) · f(rho_air, sin(alpha)) )
+
+where:
+- A is the reconstructed electric-field scaling factor (from ADF),
+- alpha is the geomagnetic angle,
+- rho_air is the air density at the reconstructed source position,
+- f is a correction function learned from simulations.
+
+⚠️ The reconstruction uses **electric-field amplitudes (µV/m)**, not ADC counts.
+
+---
+
+### Directory Structure
+Energy_recons/
+├── compute_correction.py # Derive correction coefficients from simulations
+├── reconstruction.py # Apply correction and reconstruct energy
+├── utils.py # Helper functions (splits, ML, corrections)
+├── config.py # Paths, constants, configuration
+
+## Workflow
+
+The energy reconstruction is performed in two steps:
+
+### 1. Compute Correction Coefficients (`compute_correction.py`)
+
+- Uses **simulated events only**
+- Merges simulation truth with reconstruction outputs (ADF + SWF)
+- Applies quality cuts (zenith, antennas, χ², amplitudes)
+- Computes:
+  - geomagnetic factor sin(alpha)
+  - air density at source position
+- Fits a polynomial regression model to describe secondary dependencies
+- Saves the trained model for later use
+
+**Outputs:**
+- `coefficients.pkl` – trained model (used for reconstruction)
+- `coefficients.csv` – regression coefficients (for reproducibility)
+
+---
+
+### 2. Energy Reconstruction (`reconstruction.py`)
+
+- Applies precomputed correction coefficients
+- Can be used on:
+  - simulations (validation and resolution)
+  - real data (energy reconstruction only)
+- Computes:
+  - corrected energy estimator
+  - (simulations only) resolution and diagnostic plots
+
+A **train/test split** can be enabled for simulations:
+- correction may be applied to both subsets,
+- performance metrics are computed **only on the test set**.
+
+---
+
+### Notes
+
+- Angles in **degrees**
+- Distances in **meters**
+- Air density in **kg/m³**
+- Energy typically in **EeV**
+- Train/test split is done by **unique event ID** to avoid information leakage
