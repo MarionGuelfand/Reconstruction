@@ -124,9 +124,8 @@ The energy reconstruction is performed in two steps:
   which accounts for secondary dependencies of the radio signal beyond the pure geomagnetic scaling.
 - Saves the trained model for later use
 
-**Outputs:**
-- `coefficients.pkl` – trained model used to compute *f(ρ_air, sin(α))*
-- `coefficients.csv` – regression coefficients (for reproducibility)
+**Outputs:** 
+- `coefficients.pkl` and `coefficients.csv` – regression coefficients to compute *f(ρ_air, sin(α))*
 
 
 ### 2. Energy Reconstruction (`reconstruction.py`)
