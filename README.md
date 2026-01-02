@@ -98,9 +98,13 @@ where:
 
 ### Directory Structure
 Energy_recons/
+
 ├── compute_correction.py # Derive correction coefficients from simulations
+
 ├── reconstruction.py # Apply correction and reconstruct energy
+
 ├── utils.py # Helper functions (splits, ML, corrections)
+
 ├── config.py # Paths, constants, configuration
 
 ## Workflow
@@ -110,19 +114,20 @@ The energy reconstruction is performed in two steps:
 ### 1. Compute Correction Coefficients (`compute_correction.py`)
 
 - Uses **simulated events only**
-- Merges simulation truth with reconstruction outputs (ADF + SWF)
-- Applies quality cuts (zenith, antennas, χ², amplitudes)
+- Applies quality cuts (zenith, number of antennas, χ², amplitudes)
 - Computes:
-  - geomagnetic factor sin(alpha)
-  - air density at source position
-- Fits a polynomial regression model to describe secondary dependencies
+  - geomagnetic factor **sin(α)**
+  - air density **ρ_air** at the reconstructed source position
+- **Fits a polynomial regression model to compute the correction term**
+  
+  **f(ρ_air, sin(α))**,  
+  which accounts for secondary dependencies of the radio signal beyond the pure geomagnetic scaling.
 - Saves the trained model for later use
 
 **Outputs:**
-- `coefficients.pkl` – trained model (used for reconstruction)
+- `coefficients.pkl` – trained model used to compute *f(ρ_air, sin(α))*
 - `coefficients.csv` – regression coefficients (for reproducibility)
 
----
 
 ### 2. Energy Reconstruction (`reconstruction.py`)
 
