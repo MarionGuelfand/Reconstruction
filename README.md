@@ -6,6 +6,7 @@ It includes modules for:
 
 - **Data extraction** from ROOT files (antenna coordinates, peak amplitudes, times)
 - **Reconstruction** of events (with PWF, SWF, ADF)
+- **Energy reconstruction** from radio amplitudes with geomagnetic and atmospheric corrections
 - **Analysis** of reconstructed events
 
 
