@@ -145,7 +145,26 @@ A **train/test split** can be enabled for simulations:
 - correction may be applied to both subsets,
 - performance metrics are computed **only on the test set**.
 
----
+## Alternative Energy Reconstruction (Voltage-Based)
+
+In addition to the standard energy reconstruction based on electric-field amplitudes,
+an alternative method (first proxy) is implemented using the **measured voltage amplitude or ADC amplitude** directly.
+
+This approach relies on a linear calibration of the form:
+
+E_recons = ( A / sin(α) − b ) / a
+
+where:
+- A is the reconstructed **voltage amplitude or ADC amplitude**,
+- α is the geomagnetic angle,
+- a and b are calibration coefficients derived from simulations.
+
+This method provides a fast and simple energy estimator,
+without explicit atmospheric or source-position corrections.
+
+The voltage-based reconstruction is less accurate than the full correction method,
+but offers a first proxy directly on voltage or ADC data.
+
 
 ### Notes
 
@@ -153,4 +172,3 @@ A **train/test split** can be enabled for simulations:
 - Distances in **meters**
 - Air density in **kg/m³**
 - Energy typically in **EeV**
-- Train/test split is done by **unique event ID** to avoid information leakage
