@@ -21,6 +21,8 @@ and check which DUs are alive or dead.
 
 ├── Analysis/ # Analysis scripts and plotting
 
+├── Energy_recons/ # Scrpt to reconstruct energy
+
 ├── config.py # Configuration paths and parameters
 
 ## Output Files Details
